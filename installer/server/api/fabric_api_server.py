@@ -6,6 +6,7 @@ from functools import wraps
 import re
 import requests
 import os
+import html
 from dotenv import load_dotenv
 from importlib import resources
 
@@ -166,7 +167,7 @@ pattern_path_mappings = {
 @app.route("/<pattern>", methods=["POST"])
 @auth_required  # Require authentication
 def milling(pattern):
-    """    Combine fabric pattern with input from user and send to OpenAI's GPT-4 model.
+    """Combine fabric pattern with input from user and send to OpenAI's GPT-4 model.
 
     Returns:
         JSON: A JSON response containing the generated response or an error message.
@@ -174,7 +175,6 @@ def milling(pattern):
     Raises:
         Exception: If there is an error during the API call.
     """
-
     data = request.get_json()
 
     # Warn if there's no input
@@ -183,6 +183,9 @@ def milling(pattern):
 
     # Get data from client
     input_data = data["input"]
+
+    # Sanitize the input data
+    sanitized_input_data = html.escape(input_data)
 
     # Set the system and user URLs
     urls = pattern_path_mappings[pattern]
@@ -194,7 +197,7 @@ def milling(pattern):
 
     # Build the API call
     system_message = {"role": "system", "content": system_content}
-    user_message = {"role": "user", "content": user_file_content + "\n" + input_data}
+    user_message = {"role": "user", "content": user_file_content + "\n" + sanitized_input_data}
     messages = [system_message, user_message]
     try:
         response = openai.chat.completions.create(
