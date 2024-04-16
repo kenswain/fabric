@@ -2,6 +2,7 @@ import jwt
 import json
 import openai
 from flask import Flask, request, jsonify
+from werkzeug.security import safe_str_cmp
 from functools import wraps
 import re
 import requests
@@ -12,7 +13,9 @@ from importlib import resources
 
 
 app = Flask(__name__)
-
+users = {
+    "user1": {"password": "password1"}
+}
 @app.errorhandler(404)
 def not_found(e):
     return jsonify({"error": "The requested resource was not found."}), 404
@@ -244,13 +247,17 @@ def login():
     username = data["username"]
     password = data["password"]
 
-    if username in users and users[username]["password"] == password:
-        # Generate a JWT token
-        token = jwt.encode({"username": username}, os.getenv("JWT_SECRET"), algorithm="HS256")
+    if username in users:
+        user_password = users[username]["password"]
+        if safe_str_cmp(user_password, password):
+            # Generate a JWT token
+            token = jwt.encode(
+                {"username": username}, os.getenv("JWT_SECRET"), algorithm="HS256"
+            )
 
-        return jsonify({"token": token.decode("utf-8")})
+            return jsonify({"token": <masked>.decode("utf-8")})
 
-    return jsonify({"error": "Invalid username or password"}), 401
+    return jsonify({"error": "Invalid Credentials"}), 401
 
 
 def main():
