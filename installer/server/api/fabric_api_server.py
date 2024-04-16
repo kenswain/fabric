@@ -8,6 +8,7 @@ import re
 import requests
 import os
 import html
+from flask import escape
 from dotenv import load_dotenv
 from importlib import resources
 
@@ -222,7 +223,7 @@ def milling(pattern):
 def register():
     data = request.get_json()
 
-    username = data["username"]
+    username = escape(data["username"])
     password = data["password"]
 
     if username in users:
@@ -237,7 +238,7 @@ def register():
 
     token = jwt.encode({"username": username}, os.getenv("JWT_SECRET"), algorithm="HS256")
 
-    return jsonify({"token": token.decode("utf-8")})
+    return jsonify({"token": escape(token).decode("utf-8")})
 
 
 @app.route("/login", methods=["POST"])
